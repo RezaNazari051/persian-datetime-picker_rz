@@ -3,8 +3,8 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:persian_datetime_picker/src/date/shamsi_date.dart';
 
+import 'date/shamsi_date.dart';
 import 'pdate_picker_common.dart';
 import 'pdate_utils.dart' as utils;
 import 'pdate_utils.dart';

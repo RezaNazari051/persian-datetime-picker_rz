@@ -4,8 +4,9 @@ import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:persian_datetime_picker/src/date/shamsi_date.dart';
+import 'package:test_cal_app/main.dart';
 
+import 'date/shamsi_date.dart';
 import 'pdate_utils.dart' as utils;
 import 'pdate_utils.dart';
 
@@ -18,6 +19,7 @@ const double _monthItemSpaceBetweenRows = 8.0;
 const double _horizontalPadding = 8.0;
 const double _maxCalendarWidthLandscape = 384.0;
 const double _maxCalendarWidthPortrait = 480.0;
+bool isTodayHidden = false;
 
 /// Displays a scrollable calendar grid that allows a user to select a range
 /// of dates.
@@ -26,16 +28,21 @@ const double _maxCalendarWidthPortrait = 480.0;
 // internal component used by [showDateRangePicker].
 class PCalendarDateRangePicker extends StatefulWidget {
   /// Creates a scrollable calendar grid for picking date ranges.
-  PCalendarDateRangePicker({
-    Key? key,
-    Jalali? initialStartDate,
-    Jalali? initialEndDate,
-    required Jalali firstDate,
-    required Jalali lastDate,
-    Jalali? currentDate,
-    required this.onStartDateChanged,
-    required this.onEndDateChanged,
-  })  : initialStartDate =
+  PCalendarDateRangePicker(
+      {Key? key,
+      Jalali? initialStartDate,
+      Jalali? initialEndDate,
+      required Jalali firstDate,
+      required Jalali lastDate,
+      Jalali? currentDate,
+      required this.onStartDateChanged,
+      required this.onEndDateChanged,
+      required this.spaceTodayText,
+      required this.locale,
+      this.inRangeColor,
+      this.selectedDateColor,
+      this.dateTextStyle})
+      : initialStartDate =
             initialStartDate != null ? utils.dateOnly(initialStartDate) : null,
         initialEndDate =
             initialEndDate != null ? utils.dateOnly(initialEndDate) : null,
@@ -72,6 +79,16 @@ class PCalendarDateRangePicker extends StatefulWidget {
 
   /// Called when the user changes the end date of the selected range.
   final ValueChanged<Jalali?> onEndDateChanged;
+
+  final double spaceTodayText;
+
+  final Locale locale;
+
+  final Color? inRangeColor;
+
+  final Color? selectedDateColor;
+
+  final TextStyle? dateTextStyle;
 
   @override
   State<PCalendarDateRangePicker> createState() =>
@@ -181,6 +198,11 @@ class _PCalendarDateRangePickerState extends State<PCalendarDateRangePicker> {
       lastDate: widget.lastDate,
       displayedMonth: month,
       onChanged: _updateSelection,
+      spaceTodayText: widget.spaceTodayText,
+      locale: widget.locale,
+      selectedDateColor: widget.selectedDateColor ?? Colors.red,
+      inRangeColor: widget.inRangeColor ?? Colors.red,
+      dateTextStyle: widget.dateTextStyle,
     );
   }
 
@@ -449,10 +471,22 @@ class _DayHeaders extends StatelessWidget {
     final List<Widget> labels = _getDayHeaders(textStyle, localizations);
 
     // Add leading and trailing containers for edges of the custom grid layout.
-    labels.insert(0, Container());
-    labels.add(Container());
+    labels.insert(
+      0,
+      Container(),
+    );
+    labels.add(
+      Container(),
+    );
 
     return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.grey[300]!,
+          ),
+        ),
+      ),
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).orientation == Orientation.landscape
             ? _maxCalendarWidthLandscape
@@ -600,6 +634,11 @@ class _MonthItem extends StatefulWidget {
     required this.firstDate,
     required this.lastDate,
     required this.displayedMonth,
+    required this.spaceTodayText,
+    required this.locale,
+    this.inRangeColor,
+    this.selectedDateColor,
+    required this.dateTextStyle,
     // ignore: unused_element
     this.dragStartBehavior = DragStartBehavior.start,
   })  : assert(!firstDate.isAfter(lastDate)),
@@ -638,6 +677,16 @@ class _MonthItem extends StatefulWidget {
 
   /// The month whose days are displayed by this picker.
   final Jalali displayedMonth;
+
+  final double spaceTodayText;
+
+  final Locale locale;
+
+  final Color? selectedDateColor;
+
+  final Color? inRangeColor;
+
+  final TextStyle? dateTextStyle;
 
   /// Determines the way that drag start behavior is handled.
   ///
@@ -726,17 +775,21 @@ class _MonthItemState extends State<_MonthItem> {
     }
   }
 
-  Widget _buildDayItem(BuildContext context, Jalali dayToBuild,
-      int firstDayOffset, int daysInMonth) {
+  Widget _buildDayItem(
+      BuildContext context,
+      Jalali dayToBuild,
+      int firstDayOffset,
+      int daysInMonth,
+      double todaySpace,
+      Color inRangeColor,
+      Locale locale) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
     final TextTheme textTheme = theme.textTheme;
     final MaterialLocalizations localizations =
         MaterialLocalizations.of(context);
     final TextDirection textDirection = Directionality.of(context);
-    final Color highlightColor = _highlightColor(context);
     final int day = dayToBuild.day;
-
     final bool isDisabled = dayToBuild.isAfter(widget.lastDate) ||
         dayToBuild.isBefore(widget.firstDate);
 
@@ -760,7 +813,10 @@ class _MonthItemState extends State<_MonthItem> {
       // highlight, and a contrasting text color.
       itemStyle = textTheme.bodyText2?.apply(color: colorScheme.onPrimary);
       decoration = BoxDecoration(
-        color: colorScheme.primary,
+        // jasem
+        // color: colorScheme.primary,
+        color: inRangeColor,
+        // color: Colors.red,
         shape: BoxShape.circle,
       );
 
@@ -770,7 +826,9 @@ class _MonthItemState extends State<_MonthItem> {
             ? _HighlightPainterStyle.highlightTrailing
             : _HighlightPainterStyle.highlightLeading;
         highlightPainter = _HighlightPainter(
-          color: highlightColor,
+          //!Reza
+          color: inRangeColor,
+          // color: Colors.red,
           style: style,
           textDirection: textDirection,
         );
@@ -778,21 +836,28 @@ class _MonthItemState extends State<_MonthItem> {
     } else if (isInRange) {
       // The days within the range get a light background highlight.
       highlightPainter = _HighlightPainter(
-        color: highlightColor,
+        //! Reza
+        // color: colorScheme.tertiary,
+        color: inRangeColor,
         style: _HighlightPainterStyle.highlightAll,
         textDirection: textDirection,
       );
     } else if (isDisabled) {
-      itemStyle = textTheme.bodyText2
-          ?.apply(color: colorScheme.onSurface.withOpacity(0.38));
-    } else if (utils.isSameDay(widget.currentDate, dayToBuild)) {
+      itemStyle = textTheme.bodyText2?.apply(
+        color: colorScheme.onSurface.withOpacity(0.38),
+        decoration: TextDecoration.lineThrough,
+      );
+    }
+    //! Reza
+
+    else if (utils.isSameDay(widget.currentDate, dayToBuild)) {
       // The current day gets a different text color and a circle stroke
       // border.
       itemStyle = textTheme.bodyText2?.apply(color: colorScheme.primary);
-      decoration = BoxDecoration(
-        border: Border.all(color: colorScheme.primary, width: 1),
-        shape: BoxShape.circle,
-      );
+
+      //! Reza
+      // itemStyle = textTheme.bodyText2?.apply(color: Colors.red);
+      // itemStyle = textTheme.bodyText2?.apply(color: colorScheme.tertiary);
     }
 
     // We want the day of month to be spoken first irrespective of the
@@ -802,7 +867,7 @@ class _MonthItemState extends State<_MonthItem> {
     // for the day of month. To do that we prepend day of month to the
     // formatted full date.
     String semanticLabel =
-        '${utils.formatDecimal(day)}, ${dayToBuild.formatFullDate()}';
+        '${utils.formatDecimal(day).toFarsi(context, locale)}, ${dayToBuild.formatFullDate().toFarsi(context, locale)}';
     if (isSelectedDayStart) {
       semanticLabel =
           localizations.dateRangeStartDateSemanticLabel(semanticLabel);
@@ -810,17 +875,34 @@ class _MonthItemState extends State<_MonthItem> {
       semanticLabel =
           localizations.dateRangeEndDateSemanticLabel(semanticLabel);
     }
-
     Widget dayWidget = Container(
       decoration: decoration,
-      child: Center(
-        child: Semantics(
-          label: semanticLabel,
-          selected: isSelectedDayStart || isSelectedDayEnd,
-          child: ExcludeSemantics(
-            child: Text(formatDecimal(day), style: itemStyle),
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          highlightPainter == null &&
+                  isTodayHidden &&
+                  isTodayHidden &&
+                  utils.isSameDay(widget.currentDate, dayToBuild)
+              ? Positioned(
+                  top: widget.spaceTodayText,
+                  child: const Text('امروز'),
+                )
+              : const SizedBox.shrink(),
+          Center(
+            child: Semantics(
+              label: semanticLabel,
+              selected: isSelectedDayStart || isSelectedDayEnd,
+              child: ExcludeSemantics(
+                child: Text(
+                  formatDecimal(day).toFarsi(context, locale),
+                  style: itemStyle,
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
 
@@ -834,7 +916,17 @@ class _MonthItemState extends State<_MonthItem> {
     if (!isDisabled) {
       dayWidget = InkResponse(
         focusNode: _dayFocusNodes[day - 1],
-        onTap: () => widget.onChanged(dayToBuild),
+        onTap: () {
+          setState(() {
+            if (utils.isSameDay(widget.currentDate, dayToBuild)) {
+              isTodayHidden = false;
+            } else {
+              isTodayHidden = true;
+            }
+          });
+
+          widget.onChanged(dayToBuild);
+        },
         radius: _monthItemRowHeight / 2 + 4,
         splashColor: colorScheme.primary.withOpacity(0.38),
         onFocusChange: _dayFocusChanged,
@@ -845,7 +937,10 @@ class _MonthItemState extends State<_MonthItem> {
     return dayWidget;
   }
 
-  Widget _buildEdgeContainer(BuildContext context, bool isHighlighted) {
+  Widget _buildEdgeContainer(
+    BuildContext context,
+    bool isHighlighted,
+  ) {
     return Container(color: isHighlighted ? _highlightColor(context) : null);
   }
 
@@ -873,11 +968,14 @@ class _MonthItemState extends State<_MonthItem> {
       } else {
         final Jalali dayToBuild = Jalali(year, month, day);
         final Widget dayItem = _buildDayItem(
-          context,
-          dayToBuild,
-          dayOffset,
-          daysInMonth,
-        );
+            //!NewJasem
+            context,
+            dayToBuild,
+            dayOffset,
+            daysInMonth,
+            widget.spaceTodayText,
+            widget.inRangeColor!,
+            widget.locale);
         dayItems.add(dayItem);
       }
     }
@@ -934,9 +1032,12 @@ class _MonthItemState extends State<_MonthItem> {
           alignment: AlignmentDirectional.centerStart,
           child: ExcludeSemantics(
             child: Text(
-              widget.displayedMonth.formatMonthYear(),
-              style: textTheme.bodyText2!
-                  .apply(color: themeData.colorScheme.onSurface),
+              widget.displayedMonth
+                  .formatMonthNameAndYear()
+                  .toFarsi(context, widget.locale),
+              style: widget.dateTextStyle ??
+                  textTheme.bodyText2!
+                      .apply(color: themeData.colorScheme.onSurface),
             ),
           ),
         ),

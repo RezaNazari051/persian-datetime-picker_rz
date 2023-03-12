@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:persian_datetime_picker/src/date/shamsi_date.dart';
 
+import 'date/shamsi_date.dart';
 import 'pdate_picker_common.dart';
 
 /// Returns a [Jalali] with just the date of the original, but no time set.
@@ -149,9 +149,10 @@ List<String> shortDayName = [
 /// day format (i.e. 'Jan 21'). Otherwise it will return the short date format
 /// (i.e. 'Jan 21, 2020').
 String formatRangeStartDate(
-    MaterialLocalizations localizations, Jalali? startDate, Jalali? endDate) {
+    MaterialLocalizations localizations, Jalali? startDate, Jalali? endDate,
+    {String? startDateTextHint}) {
   return startDate == null
-      ? 'تاریخ شروع'
+      ? startDateTextHint ?? 'تاریخ شروع'
       : (endDate == null || startDate.year == endDate.year)
           ? startDate.formatShortMonthDay()
           : startDate.formatShortDate();
@@ -164,9 +165,10 @@ String formatRangeStartDate(
 /// just use the short month day format (i.e. 'Jan 21'), otherwise it will
 /// include the year (i.e. 'Jan 21, 2020').
 String formatRangeEndDate(MaterialLocalizations localizations,
-    Jalali? startDate, Jalali? endDate, Jalali? currentDate) {
+    Jalali? startDate, Jalali? endDate, Jalali? currentDate,
+    {String? endDateTextHint}) {
   return endDate == null
-      ? 'تاریخ پایان'
+      ? endDateTextHint ?? 'تاریخ پایان'
       : (startDate != null &&
               startDate.year == endDate.year &&
               startDate.year == currentDate!.year)
@@ -174,8 +176,12 @@ String formatRangeEndDate(MaterialLocalizations localizations,
           : endDate.formatShortDate();
 }
 
-String formatDecimal(int number) {
-  if (number > -1000 && number < 1000) return number.toString();
+String formatDecimal(
+  int number,
+) {
+  if (number > -1000 && number < 1000) {
+    number.toString();
+  }
 
   final String digits = number.abs().toString();
   final StringBuffer result = StringBuffer(number < 0 ? '-' : '');
@@ -302,7 +308,7 @@ extension JalaliExt on Jalali {
 
   String formatShortDate() {
     final f = formatter;
-    return '${f.dd} ${f.mN}  ,${f.yyyy}';
+    return '${f.dd} ${f.mN}';
   }
 
   String formatMonthYear() {
@@ -314,6 +320,12 @@ extension JalaliExt on Jalali {
     final f = formatter;
     return '${f.dd} ${f.mN}';
   }
+
+//!Jasem
+  String formatMonthNameAndYear() {
+    final f = formatter;
+    return '${f.mN} ${f.y}';
+  }
 }
 
 extension DateTimeExt on DateTime {
@@ -322,4 +334,46 @@ extension DateTimeExt on DateTime {
   }
 }
 
+extension StringExtension on String {
+  String toLatin() => replaceAll('۰', '0')
+      .replaceAll('۱', '1')
+      .replaceAll('۲', '2')
+      .replaceAll('۳', '3')
+      .replaceAll('۴', '4')
+      .replaceAll('۵', '5')
+      .replaceAll('۶', '6')
+      .replaceAll('۷', '7')
+      .replaceAll('۸', '8')
+      .replaceAll('۹', '9')
+      .replaceAll('٪', '%');
+  String toFarsi(BuildContext context, Locale locale) {
+    return locale.countryCode == 'IR'
+        ? replaceAll('0', '۰')
+            .replaceAll('1', '۱')
+            .replaceAll('2', '۲')
+            .replaceAll('3', '۳')
+            .replaceAll('4', '۴')
+            .replaceAll('5', '۵')
+            .replaceAll('6', '۶')
+            .replaceAll('7', '۷')
+            .replaceAll('8', '۸')
+            .replaceAll('9', '۹')
+            .replaceAll('%', '٪')
+        : replaceAll('۰', '0')
+            .replaceAll('۱', '1')
+            .replaceAll('۲', '2')
+            .replaceAll('۳', '3')
+            .replaceAll('۴', '4')
+            .replaceAll('۵', '5')
+            .replaceAll('۶', '6')
+            .replaceAll('۷', '7')
+            .replaceAll('۸', '8')
+            .replaceAll('۹', '9')
+            .replaceAll('٪', '%');
+  }
 
+  String toMoneyFormat() => replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (Match match) => '${match[1]},',
+      );
+}

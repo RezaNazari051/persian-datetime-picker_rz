@@ -1,6 +1,6 @@
 import 'dart:ui' show hashValues;
 
-import 'package:persian_datetime_picker/src/date/shamsi_date.dart';
+import 'date/shamsi_date.dart';
 
 /// Mode of the date picker dialog.
 ///
@@ -15,10 +15,13 @@ import 'package:persian_datetime_picker/src/date/shamsi_date.dart';
 enum PDatePickerEntryMode {
   /// Tapping on a calendar.
   calendar,
+
   /// only calendar.
   calendarOnly,
+
   /// Text input.
   input,
+
   /// Text input only.
   inputOnly,
 }

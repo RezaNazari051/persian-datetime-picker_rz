@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:persian_datetime_picker/src/date/shamsi_date.dart';
 
+import 'date/shamsi_date.dart';
 import 'pdate_utils.dart' as utils;
 
 /// Provides a pair of text fields that allow the user to enter the start and

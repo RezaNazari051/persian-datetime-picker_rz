@@ -1,9 +1,8 @@
-
 // ignore_for_file: constant_identifier_names
 
 library date;
 
-import 'package:persian_datetime_picker/src/date/shamsi_date.dart';
+import 'package:test_cal_app/src/date/shamsi_date.dart';
 
 /// Super interface of Jalali and Georgian classes
 abstract class ExDate {

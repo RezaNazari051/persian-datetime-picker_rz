@@ -4,9 +4,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:persian_datetime_picker/persian_datetime_picker.dart';
-import 'package:persian_datetime_picker/src/cupertino/strings.dart';
+import 'package:test_cal_app/persian_datetime_picker.dart';
+import 'package:test_cal_app/src/cupertino/strings.dart';
 
+import '../date/shamsi_date.dart';
 import 'picker.dart';
 
 // simulators with "Debug View Hierarchy".
